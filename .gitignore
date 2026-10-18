@@ -1,0 +1,33 @@
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build artifacts
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+*.exe
+*.pdb
+*.ilk
+*.obj
+*.idb
+*.tlog
+*.log
+
+# Legacy Phase Development History (Kept local, excluded from GitHub repo)
+archive_phases/
+P1/
+P2/
+P3/
+P4/
+P5/
+
+# Generated CSV Output Data
+results_*.csv
+results.csv
