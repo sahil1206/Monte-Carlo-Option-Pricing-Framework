@@ -31,3 +31,11 @@ P5/
 # Generated CSV Output Data
 results_*.csv
 results.csv
+
+# Agent and IDE metadata
+.agents/
+.gemini/
+
+# Generated plot outputs
+volatility_skew_*.png
+*.html

@@ -34,6 +34,7 @@ An enterprise-grade, highly modular, multi-asset **Monte Carlo Option Pricing En
   - [Option B: Visual Studio (Windows "Open Folder")](#option-b-visual-studio-windows-open-folder)
   - [Option C: Command Line (GCC / Clang)](#option-c-command-line-gcc--clang)
   - [Option D: Standalone Python TUI](#option-d-standalone-python-tui)
+  - [Option E: Volatility Skew & Surface Visualization](#option-e-volatility-skew--surface-visualization)
 - [Usage & Sample Output](#usage--sample-output)
 - [Author & Academic Context](#author--academic-context)
 
@@ -282,6 +283,7 @@ concept SDEConcept = std::derived_from<T, SDEBase> &&
 │   ├── RNG.cpp                 # Thread-local RNG seeding
 │   ├── SDE.cpp                 # SDE drift, diffusion, and analytical spatial derivatives
 │   └── TUI.cpp                 # Interactive Workbench event loop and rendering
+├── plot_skew_surface.py        # 3D Volatility Skew & Price Surface Visualizer (Matplotlib & Plotly)
 ├── tui_pricer.py               # Standalone, zero-dependency Python TUI companion runner
 ├── CMakeLists.txt              # Standard cross-platform CMake build configuration
 ├── README.md                   # Project documentation and quantitative guide
@@ -368,6 +370,33 @@ If you do not have a C++ compiler installed on your current machine, you can run
 
 ```bash
 python tui_pricer.py
+```
+
+---
+
+### Option E: Volatility Skew & Surface Visualization (`plot_skew_surface.py`)
+
+Generate publication-quality 3D Implied Volatility skew surfaces, 2D model comparison slices, and interactive WebGL HTML plots:
+
+```bash
+# 1. Install visualization dependencies
+pip install numpy scipy matplotlib pandas plotly
+
+# 2. Run with default CEV leverage skew parameters
+python plot_skew_surface.py
+
+# 3. Command-line options & usage examples:
+# Run headless (save plots without opening popup GUI windows)
+python plot_skew_surface.py --save-only
+
+# Customize market parameters (S0 = 100, CEV beta = 0.50 for steep skew, 50,000 paths)
+python plot_skew_surface.py --s0 100 --beta 0.50 --nsim 50000 --save-only
+
+# Ingest custom C++ Monte Carlo CSV results directly
+python plot_skew_surface.py --csv results.csv --out-3d skew_3d.png --out-html interactive.html
+
+# View all available CLI flags
+python plot_skew_surface.py --help
 ```
 
 ---

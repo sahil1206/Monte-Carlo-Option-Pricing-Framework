@@ -23,6 +23,7 @@ Prerequisites:
 
 import os
 import glob
+import argparse
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -185,7 +186,9 @@ def plot_skew_surface_3d(
     T_mesh: np.ndarray,
     iv_mesh: np.ndarray,
     price_mesh: np.ndarray,
-    title_suffix: str = "CEV Model (beta = 0.60)"
+    title_suffix: str = "CEV Model (beta = 0.60)",
+    output_path: str = "volatility_skew_surface_3d.png",
+    show: bool = True
 ) -> None:
     """
     Renders dual side-by-side publication-quality 3D surfaces:
@@ -254,10 +257,11 @@ def plot_skew_surface_3d(
     ax2.view_init(elev=28, azim=-125)
     
     plt.tight_layout()
-    output_path = "volatility_skew_surface_3d.png"
     plt.savefig(output_path, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
     print(f"[SUCCESS] Saved high-resolution 3D surface plot to: {output_path}")
-    plt.show()
+    if show:
+        plt.show()
+    plt.close(fig)
 
 
 def plot_skew_slices_2d(
@@ -265,7 +269,9 @@ def plot_skew_slices_2d(
     strikes: np.ndarray = np.linspace(70, 130, 25),
     T_slice: float = 1.0,
     r: float = 0.05,
-    sig: float = 0.20
+    sig: float = 0.20,
+    output_path: str = "volatility_skew_slices_2d.png",
+    show: bool = True
 ) -> None:
     """
     Plots 2D Volatility Skew cross-sections comparing different Elasticity parameters (beta):
@@ -278,7 +284,7 @@ def plot_skew_slices_2d(
     colors = ["#38bdf8", "#f59e0b", "#ef4444"]
     labels = ["GBM (Beta = 1.0, Flat Line)", "CEV (Beta = 0.8, Moderate Skew)", "CEV (Beta = 0.5, Steep Skew)"]
     
-    plt.figure(figsize=(10, 6), facecolor="#0f172a")
+    fig = plt.figure(figsize=(10, 6), facecolor="#0f172a")
     ax = plt.gca()
     ax.set_facecolor("#1e293b")
     
@@ -302,10 +308,12 @@ def plot_skew_slices_2d(
     for text in leg.get_texts():
         text.set_color("white")
     
-    output_path = "volatility_skew_slices_2d.png"
+    plt.tight_layout()
     plt.savefig(output_path, dpi=300, facecolor="#0f172a", edgecolor='none')
     print(f"[SUCCESS] Saved 2D Skew slices plot to: {output_path}")
-    plt.show()
+    if show:
+        plt.show()
+    plt.close(fig)
 
 
 # ==============================================================================
@@ -356,41 +364,80 @@ def export_interactive_plotly(
 
 
 # ==============================================================================
-# MAIN EXECUTION ENTRYPOINT
+# MAIN EXECUTION ENTRYPOINT & CLI PARSER
 # ==============================================================================
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="High-Performance Volatility Skew & Price Surface Generator (Monte Carlo & CEV/GBM)",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("--s0", type=float, default=100.0, help="Initial underlying spot price S0")
+    parser.add_argument("--k-min", type=float, default=75.0, help="Minimum strike price K")
+    parser.add_argument("--k-max", type=float, default=125.0, help="Maximum strike price K")
+    parser.add_argument("--k-steps", type=int, default=21, help="Number of strike evaluation points")
+    parser.add_argument("--t-min", type=float, default=0.2, help="Minimum maturity T in years")
+    parser.add_argument("--t-max", type=float, default=2.0, help="Maximum maturity T in years")
+    parser.add_argument("--t-steps", type=int, default=10, help="Number of maturity evaluation points")
+    parser.add_argument("--r", type=float, default=0.04, help="Risk-free interest rate r")
+    parser.add_argument("--sig", type=float, default=0.20, help="Volatility scaling parameter sigma")
+    parser.add_argument("--beta", type=float, default=0.60, help="CEV Elasticity parameter beta (< 1.0 creates equity leverage skew)")
+    parser.add_argument("--nsim", type=int, default=25000, help="Number of Monte Carlo simulation paths per point")
+    parser.add_argument("--nt", type=int, default=120, help="Number of time integration steps per path")
+    parser.add_argument("--csv", type=str, default=None, help="Optional custom path to C++ Monte Carlo engine CSV results")
+    parser.add_argument("--out-3d", type=str, default="volatility_skew_surface_3d.png", help="Output filename for 3D surface plot")
+    parser.add_argument("--out-2d", type=str, default="volatility_skew_slices_2d.png", help="Output filename for 2D skew comparison slices")
+    parser.add_argument("--out-html", type=str, default="interactive_volatility_surface.html", help="Output filename for interactive Plotly HTML")
+    parser.add_argument("--save-only", "--no-show", action="store_true", help="Save plot images to disk without opening GUI popups")
+    parser.add_argument("--no-html", action="store_true", help="Skip Plotly interactive HTML generation")
+
+    args = parser.parse_args()
+
     print("=" * 80)
     print("  HIGH-PERFORMANCE VOLATILITY SKEW & SURFACE ANALYTICS ENGINE")
     print("=" * 80)
     
-    # 1. Check if user has C++ results CSV to inspect
-    df_cpp = load_cpp_results()
+    # 1. Check if user provided or has C++ results CSV to inspect
+    df_cpp = load_cpp_results(args.csv)
     
     # 2. Simulate complete high-resolution (K, T) grid under CEV model
-    #    (Shows the prominent leverage skew where low strikes have high vol)
-    S0 = 100.0
-    strikes = np.linspace(75.0, 125.0, 21)
-    maturities = np.linspace(0.2, 2.0, 10)
+    strikes = np.linspace(args.k_min, args.k_max, args.k_steps)
+    maturities = np.linspace(args.t_min, args.t_max, args.t_steps)
     
     K_mesh, T_mesh, price_mesh, iv_mesh = simulate_cev_surface(
-        S0=S0,
+        S0=args.s0,
         strikes=strikes,
         maturities=maturities,
-        r=0.04,
-        sig=0.20,
-        beta=0.60,      # CEV Elasticity < 1 creates the downward equity skew
-        NSIM=25000,
-        NT=120
+        r=args.r,
+        sig=args.sig,
+        beta=args.beta,
+        NSIM=args.nsim,
+        NT=args.nt
     )
     
+    show_plots = not args.save_only
+
     # 3. Render 3D Surface Plots (IV Surface & Price Surface)
-    plot_skew_surface_3d(K_mesh, T_mesh, iv_mesh, price_mesh, title_suffix="CEV Model (beta = 0.60, r = 4%)")
+    plot_skew_surface_3d(
+        K_mesh, T_mesh, iv_mesh, price_mesh,
+        title_suffix=f"CEV Model (beta = {args.beta:.2f}, r = {args.r*100:.1f}%)",
+        output_path=args.out_3d,
+        show=show_plots
+    )
     
     # 4. Render 2D Skew Slices comparing GBM vs CEV
-    plot_skew_slices_2d(S0=S0, strikes=strikes, T_slice=1.0, r=0.04, sig=0.20)
+    plot_skew_slices_2d(
+        S0=args.s0,
+        strikes=strikes,
+        T_slice=1.0,
+        r=args.r,
+        sig=args.sig,
+        output_path=args.out_2d,
+        show=show_plots
+    )
     
-    # 5. Export interactive browser visualization
-    export_interactive_plotly(K_mesh, T_mesh, iv_mesh)
+    # 5. Export interactive browser visualization (Plotly)
+    if not args.no_html:
+        export_interactive_plotly(K_mesh, T_mesh, iv_mesh, filename=args.out_html)
     
     print("\n[COMPLETE] All volatility skew plots generated successfully.")
