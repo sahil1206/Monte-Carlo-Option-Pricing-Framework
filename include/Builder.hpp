@@ -1,6 +1,5 @@
 // Builder.hpp
 // This is the Builder.hpp file, which provides a fluent interface for constructing option, SDE, and Monte Carlo simulation objects.
-// Before we were creating these objects directly in main funciton, but now we can use builders to set parameters step by step.
 // Author: Sahil Jain
 
 #pragma once
@@ -40,8 +39,21 @@ public:
     OptionBuilder& withType(int type_);
     OptionBuilder& withBarrier(double barrier_, bool isUpAndOut_);
     OptionBuilder& asAsian();
+    OptionBuilder& resetOptionType();
     std::unique_ptr<OptionParams::OptionData> build() const;
     std::tuple<double, double, double, double, double, double, int> getParams() const;
+
+    double getS0() const { return S0; }
+    double getK() const { return K; }
+    double getT() const { return T; }
+    double getR() const { return r; }
+    double getSig() const { return sig; }
+    double getD() const { return D; }
+    int getType() const { return type; }
+    double getBarrier() const { return barrier; }
+    bool getIsBarrier() const { return isBarrier; }
+    bool getIsAsian() const { return isAsian; }
+    bool getIsUpAndOut() const { return isUpAndOut; }
 };
 
 class SDEBuilder {
@@ -61,6 +73,9 @@ public:
     SDEBuilder& withOptionData(std::shared_ptr<OptionParams::OptionData> opt);
     std::shared_ptr<SDEBase> build() const;
     std::string getModelType() const;
+    double getBeta() const { return beta; }
+    double getKappa() const { return kappa; }
+    double getTheta() const { return theta; }
 };
 
 class MCBuilder {
@@ -82,4 +97,7 @@ public:
     MCBuilder& withNT(long NT_);
     std::unique_ptr<MCEngine> build() const;
     std::tuple<FDScheme, long, long> getParams() const;
+    FDScheme getScheme() const { return scheme; }
+    long getNSIM() const { return NSIM; }
+    long getNT() const { return NT; }
 };

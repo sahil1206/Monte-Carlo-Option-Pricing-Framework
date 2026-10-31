@@ -44,11 +44,19 @@ OptionBuilder& OptionBuilder::withBarrier(double barrier_, bool isUpAndOut_) {
     barrier = barrier_;
     isUpAndOut = isUpAndOut_;
     isBarrier = true;
+    isAsian = false;
     return *this;
 }
 
 OptionBuilder& OptionBuilder::asAsian() {
     isAsian = true;
+    isBarrier = false;
+    return *this;
+}
+
+OptionBuilder& OptionBuilder::resetOptionType() {
+    isBarrier = false;
+    isAsian = false;
     return *this;
 }
 

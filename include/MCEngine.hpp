@@ -1,6 +1,6 @@
 // MCEngine.hpp
 // This file defines the MCEngine class, which implements the Monte Carlo simulation for option pricing.
-// It includes methods for simulating the price paths of the underlying asset, calculating the option payoff, and reporting the results.
+// Author: Sahil Jain
 
 #ifndef MCEngine_hpp
 #define MCEngine_hpp
@@ -20,7 +20,7 @@ struct PricingResult {
     double stdDev;
     double stdError;
     int hitsZero;
-    std::chrono::duration<double> elapsedTime; // Add timing
+    std::chrono::duration<double> elapsedTime;
 };
 
 // C++20 Concepts
@@ -63,6 +63,6 @@ public:
         : sde(std::move(sde_)), rng(*rng_.get()), payoff(payoff_) {
     }
 
-    PricingResult simulate(long NSIM, long NT, FDScheme scheme);
+    PricingResult simulate(long NSIM, long NT, FDScheme scheme, bool antithetic = false);
 };
 #endif

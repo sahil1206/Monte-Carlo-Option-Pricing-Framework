@@ -12,7 +12,7 @@ else()
     add_compile_options(-Wall -Wextra -O3 -pthread)
 endif()
 
-# Main Production Executable
+# Main Production Executable (Interactive TUI by default, batch with --batch)
 add_executable(monte_carlo_pricer
     src/main.cpp
     src/Builder.cpp
@@ -21,6 +21,7 @@ add_executable(monte_carlo_pricer
     src/Payoff.cpp
     src/RNG.cpp
     src/SDE.cpp
+    src/TUI.cpp
 )
 
 target_include_directories(monte_carlo_pricer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
